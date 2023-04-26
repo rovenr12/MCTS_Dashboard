@@ -122,7 +122,7 @@ def upload_file(contents, filename, original_data):
     Output('hover_text', 'options'),
     Output('hover_text', 'value'),
     Input('node_config', 'hidden'),
-    State('dataframe', 'data')
+    State(store_data.df.store_id, 'data')
 )
 def hover_text_update(is_hidden, data):
     # If the configuration is hidden or there is no data, set the options and value to None
@@ -143,7 +143,7 @@ def hover_text_update(is_hidden, data):
     Output('legend', 'options'),
     Output('legend', 'value'),
     Input('node_config', 'hidden'),
-    State('dataframe', 'data')
+    State(store_data.df.store_id, 'data')
 )
 def legend_select_update(is_hidden, data):
     # If the configuration is hidden or there is no data, set the options and value to None
@@ -164,7 +164,7 @@ def legend_select_update(is_hidden, data):
     Output('visit_threshold', 'max'),
     Output('visit_threshold', 'value'),
     Input('node_config', 'hidden'),
-    State('dataframe', 'data')
+    State(store_data.df.store_id, 'data')
 )
 def visit_threshold_input_update(is_hidden, data):
     # If the configuration is hidden or there is no data, set the options and value to None
@@ -199,7 +199,7 @@ def reset_custom_symbol_button_update(_):
 @manager.callback(
     Output('custom_symbols_div', 'hidden'),
     Input('custom_symbol_add_div', 'hidden'),
-    Input('custom_symbols', 'data'),
+    Input(store_data.custom_symbols.store_id, 'data'),
 )
 def hide_custom_symbols_div(add_custom_symbol_is_hidden, custom_symbols):
     # If there is any custom symbol can be added, don't need to hide the custom symbols div
@@ -219,8 +219,8 @@ def hide_custom_symbols_div(add_custom_symbol_is_hidden, custom_symbols):
     Output('custom_symbol_selection', 'options'),
     Output('custom_symbol_selection', 'value'),
     Output('custom_symbol_add_div', 'hidden'),
-    Input('custom_symbols', 'data'),
-    State('dataframe', 'data')
+    Input(store_data.custom_symbols.store_id, 'data'),
+    State(store_data.df.store_id, 'data')
 )
 def set_add_custom_symbol_configuration(custom_symbols, data):
     # If there is no data available, set everything to None and don't show the custom symbols div
@@ -250,10 +250,10 @@ def set_add_custom_symbol_configuration(custom_symbols, data):
 
 
 @manager.callback(
-    Output('custom_symbols', 'data'),
+    Output(store_data.custom_symbols.store_id, 'data'),
     Input('custom_symbol_button', 'n_clicks'),
     Input({'type': 'remove_custom_symbol_button', 'index': ALL}, 'n_clicks'),
-    State('custom_symbols', 'data'),
+    State(store_data.custom_symbols.store_id, 'data'),
     State('custom_symbol_attribute', 'value'),
     State('custom_symbol_selection', 'value'),
 )
@@ -280,7 +280,7 @@ def update_custom_symbol_dict(n_clicks, _, custom_symbols, attribute, symbol):
 
 @manager.callback(
     Output('selected_custom_symbols_div', "children"),
-    Input('custom_symbols', 'data'),
+    Input(store_data.custom_symbols.store_id, 'data'),
 )
 def update_custom_symbols_configuration(custom_symbols):
     # If there is no custom symbols, return empty list
@@ -297,18 +297,4 @@ def update_custom_symbols_configuration(custom_symbols):
         ], class_name='py-1'))
 
     return children
-
-
-# add_symbol_layout = dbc.Row([
-#     dbc.Col(dbc.Select(id='custom_symbol_attribute'), width=5, class_name='pe-1'),
-#     dbc.Col(dbc.Select(id='custom_symbol_selection'), width=5, class_name='ps-1'),
-#     dbc.Col(dbc.Button('+', id='custom_symbol_button', size='sm'), width=2,
-#             class_name='d-flex align-items-center justify-content-end')
-# ], class_name='py-1')
-#
-# custom_symbols_layout = html.Div([
-#     html.P('Custom Node Symbols', className='mb-0'),
-#     html.Div(add_symbol_layout, id='custom_symbol_add_div'),
-#     html.Div(id='selected_custom_symbols_div')
-# ], id='custom_symbols_div')
 

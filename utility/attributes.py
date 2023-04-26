@@ -8,12 +8,13 @@ def json_validator(text):
     :param text: the test case
     :return: True or False
     """
+
     # Check if the datatype of text is string
     if type(text) != str:
         return False
 
     # Check if it is not just contain a single element
-    if not text.startswith("{") or not text.startswith("["):
+    if not (text.startswith("{") or text.startswith("[")):
         return False
 
     # Try to transfer text to json and see if it is valid
@@ -49,6 +50,7 @@ def get_json_type_attributes(df):
     :param df: MCTS data file
     :return: the list of column names
     """
+
     return [attribute for attribute in get_attributes(df) if json_validator(df[attribute].iloc[0])]
 
 

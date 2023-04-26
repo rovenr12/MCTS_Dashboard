@@ -104,3 +104,15 @@ def node_name_to_action_name(df, node_name):
     """
     return df[df['Name'] == node_name].iloc[0]['Action_Name']
 
+
+def search_children_by_node_name(df, visit_threshold, node_name):
+    """
+        Get the children list of particular node that its visit time more than visit threshold
+        :param df: MCTS data file
+        :param visit_threshold: visit threshold
+        :param node_name: the name of node
+        :return: children list
+        """
+    df = df[df['Visits'] >= visit_threshold]
+    return df[df['Parent_Name'] == node_name]['Name'].tolist()
+

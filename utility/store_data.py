@@ -8,5 +8,6 @@ class StoreData:
 
 
 df = StoreData('dataframe', {"file_id": None, "file": None})
-fig_filename = StoreData("fig_filename")
+fig_filename = StoreData("fig_filename", None)
 custom_symbols = StoreData('custom_symbols', [])
+selected_node = StoreData('selected_node', None)
