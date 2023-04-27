@@ -120,7 +120,9 @@ def search_children_by_node_name(df, visit_threshold, node_name):
 
 def search_similar_node_by_features(df, visit_threshold, node_name, similarity_method, threshold, exclude_features):
     """
-    Get the list of similar nodes of node name. The node's similarity value must less than threshold
+    Get the list of similar nodes of node name.
+    The similarity between two nodes are calculated based on game features difference.
+    The node's similarity value must less than threshold
     under selected similarity evaluation method
     :param df: MCTS data file
     :param visit_threshold: visit threshold
@@ -145,6 +147,48 @@ def search_similar_node_by_features(df, visit_threshold, node_name, similarity_m
         value = similarity.distance_similarity_function_dict[similarity_method](feature1, feature2)
         if value <= threshold:
             similarities[row['Name']] = value
+
+    similarities = sorted(similarities.items(), key=lambda x: x[1])
+    similarities = [children[0] for children in similarities]
+
+    return list(similarities)
+
+
+def search_similar_node_by_children_action(df, visit_threshold, node_name, similarity_method, threshold):
+    """
+    Get the list of similar nodes of node name.
+    The similarity between two nodes are calculated based on children action difference.
+    The node's similarity value must larger than threshold
+    :param df: MCTS data file
+    :param visit_threshold: visit threshold
+    :param node_name: the name of node
+    :param similarity_method: similarity method name
+    :param threshold: similarity threshold
+    :return: similar node list
+    """
+
+    if 'Action_Name' not in df.columns:
+        return []
+
+    df = df[df['Visits'] >= visit_threshold]
+    children_dict = {name: [] for name in df['Name']}
+    action_dict = {name: idx for idx, name in enumerate(df['Action_Name'].unique())}
+
+    for _, row in df.iterrows():
+        if row['Parent_Name'] not in children_dict:
+            children_dict[row['Parent_Name']] = []
+        children_dict[row['Parent_Name']].append(action_dict[row['Action_Name']])
+
+    similarities = {}
+
+    for node, children_list in children_dict.items():
+        if node == node_name:
+            continue
+
+        value = similarity.set_similarity_function_dict[similarity_method](children_dict[node_name],
+                                                                           children_dict[node])
+        if value >= threshold:
+            similarities[node] = value
 
     similarities = sorted(similarities.items(), key=lambda x: x[1])
     similarities = [children[0] for children in similarities]

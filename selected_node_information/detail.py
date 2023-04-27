@@ -37,7 +37,7 @@ def json_content_builder(json_obj, container):
 ###############################################
 node_detail_card = dbc.Card([
     dbc.CardHeader(html.H6("Detail", className='m-0 fw-bold text-center text-primary'), class_name='py-3'),
-    dbc.CardBody(id='node_information', style={'overflow-y': 'auto', 'height': '770px'})
+    dbc.CardBody(id='node_information', style={'overflow-y': 'auto', 'height': '730px'})
 ], class_name='my-2')
 
 

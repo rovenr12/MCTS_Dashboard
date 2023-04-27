@@ -116,6 +116,9 @@ def update_node_similar_game_feature_content(similarity_method, similarity_thres
     if is_hidden:
         return None
 
+    if similarity_method is None or similarity_threshold is None:
+        return None
+
     df = pd.read_json(data['file'])
 
     if not visit_threshold:
