@@ -20,10 +20,10 @@ children_nodes_card = dbc.Card([
 # Callbacks
 ###############################################
 @manager.callback(
-    Output(component_id='children_buttons', component_property='children'),
+    Output('children_buttons', 'children'),
     Input(store_data.selected_node.store_id, 'data'),
-    State(component_id='dataframe', component_property='data'),
-    State(component_id='visit_threshold', component_property='value')
+    State('dataframe', 'data'),
+    State('visit_threshold', 'value')
 )
 def update_children_button_list(selected_node, data, visit_threshold):
     if not selected_node:

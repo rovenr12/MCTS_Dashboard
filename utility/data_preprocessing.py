@@ -1,4 +1,5 @@
 import json
+from utility import similarity
 
 BASIC_ATTRIBUTE = ["Name", "Parent_Name", "Depth", "Value", "Visits"]
 
@@ -107,12 +108,45 @@ def node_name_to_action_name(df, node_name):
 
 def search_children_by_node_name(df, visit_threshold, node_name):
     """
-        Get the children list of particular node that its visit time more than visit threshold
-        :param df: MCTS data file
-        :param visit_threshold: visit threshold
-        :param node_name: the name of node
-        :return: children list
-        """
+    Get the children list of particular node that its visit time more than visit threshold
+    :param df: MCTS data file
+    :param visit_threshold: visit threshold
+    :param node_name: the name of node
+    :return: children list
+    """
     df = df[df['Visits'] >= visit_threshold]
     return df[df['Parent_Name'] == node_name]['Name'].tolist()
 
+
+def search_similar_node_by_features(df, visit_threshold, node_name, similarity_method, threshold, exclude_features):
+    """
+    Get the list of similar nodes of node name. The node's similarity value must less than threshold
+    under selected similarity evaluation method
+    :param df: MCTS data file
+    :param visit_threshold: visit threshold
+    :param node_name: the name of node
+    :param similarity_method: similarity method name
+    :param threshold: similarity threshold
+    :param exclude_features: exclude feature list
+    :return: similar node list
+    """
+    if 'Game_Features' not in df.columns:
+        return []
+
+    df = df[df['Visits'] >= visit_threshold]
+    feature1 = get_features(df, node_name, exclude_features).values()
+
+    similarities = {}
+
+    for _, row in df.iterrows():
+        if row['Name'] == node_name:
+            continue
+        feature2 = get_features(df, row['Name'], exclude_features).values()
+        value = similarity.distance_similarity_function_dict[similarity_method](feature1, feature2)
+        if value <= threshold:
+            similarities[row['Name']] = value
+
+    similarities = sorted(similarities.items(), key=lambda x: x[1])
+    similarities = [children[0] for children in similarities]
+
+    return list(similarities)
