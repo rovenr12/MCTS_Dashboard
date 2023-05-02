@@ -76,6 +76,17 @@ def get_root_available_actions(df, exclude_actions=None, ref_col='Name'):
     return get_node_available_actions(df, root_name, exclude_actions, ref_col)
 
 
+def get_root_best_action(df):
+    """
+    Return the best action name from root node
+    :param df: MCTS data file
+    :return: the list of root actions
+    """
+    root_node = get_root_node(df)
+
+    return root_node['Best_Action']
+
+
 def get_features(df, node_name, exclude_features=None, feature_col='Game_Features'):
     """
     Return the feature dictionary of a particular node

@@ -1,17 +1,19 @@
 from dash import html, Input, Output
 import dash_bootstrap_components as dbc
 from utility import callback_manager, store_data
+from explanation.path_explaination import path_explaination_panel
 
 
 manager = callback_manager.CallbackManager()
+manager += path_explaination_panel.manager
 
 ###############################################
 # Layout
 ###############################################
 explanation_tabs = dbc.Tabs([
     dbc.Tab("Game Features", label='Game Features'),
-    dbc.Tab("Path", label='Path')
-])
+    dbc.Tab(path_explaination_panel.path_explanation_contents, label='Path')
+], class_name='h-100')
 
 explanation_card = html.Div(dbc.Card([
     dbc.CardHeader(html.H4("Root Action Explanation", className='m-0 fw-bold text-center text-primary'),
@@ -23,7 +25,7 @@ explanation_card = html.Div(dbc.Card([
 
 explanation_row = html.Div(dbc.Row([
     dbc.Col(explanation_card, lg='12', md='12', class_name='h-100'),
-], class_name='g-3 mt-1 mb-4 px-3', style={'height': '700px'}), id='root_action_explanation_div', hidden=True)
+], class_name='g-3 mt-1 mb-4 px-3', style={'height': '900px'}), id='root_action_explanation_div', hidden=True)
 
 
 ###############################################
