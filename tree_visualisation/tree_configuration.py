@@ -111,11 +111,17 @@ def upload_file(pathname, contents, filename, original_data):
 
     else:
         pathname = pathname[1:]
-        if pathname not in os.listdir("data"):
+        pathname.replace("\\", "/")
+        filepath = f"data/{pathname}"
+        if not pathname:
             return '', original_data
 
+        if not os.path.exists(filepath):
+            alert = dbc.Alert(f'{pathname} is not existed!!', color='danger', dismissable=True)
+            return alert, {'file_id': None, 'file': None}
+
         # Get data
-        df = pd.read_csv(f"data/{pathname}", sep='\t')
+        df = pd.read_csv(filepath, sep='\t')
         filename = pathname
 
     # Check the data validity.
