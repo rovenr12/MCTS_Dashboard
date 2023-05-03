@@ -4,7 +4,6 @@ import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 import pandas as pd
 
-
 manager = callback_manager.CallbackManager()
 
 ###############################################
@@ -13,9 +12,7 @@ manager = callback_manager.CallbackManager()
 tree_visualisation_div = html.Div(dbc.Card([
     dbc.CardHeader(html.H4("Tree Visualisation", className='m-0 fw-bold text-center text-primary'), class_name='py-3'),
     dbc.CardBody([
-        html.Div(dbc.Alert("Updating graph..."), hidden=True, id='graph_alert',
-                 className='text-center position-absolute top-50 start-50 translate-middle w-75'),
-        html.Div(dcc.Graph(id='tree_visualisation_graph', figure=go.Figure()), id='graph_holder', hidden=True)
+        html.Div(dcc.Graph(id='tree_visualisation_graph', figure=go.Figure()))
     ], id='output-graph')
 ], class_name='h-100'), id='tree_visualisation', hidden=True, className='my-2 shadow', style={'height': '550px'})
 
@@ -29,25 +26,6 @@ tree_visualisation_div = html.Div(dbc.Card([
 )
 def panel_control(data):
     return not (data and data['file'] is not None)
-
-
-@manager.callback(
-    Output('graph_alert', 'hidden'),
-    Output('graph_holder', 'hidden'),
-    Input(store_data.df.store_id, 'data'),
-    Input('tree_visualisation_graph', 'figure')
-)
-def graph_content_control(_, figure):
-    # Updating the data, show the graph alert and hide the graph
-    if ctx.triggered_id == 'dataframe':
-        return False, True
-
-    # There is no figure available, hide everything
-    if not figure or not figure['data']:
-        return True, True
-
-    # There is figure available, hide the graph alert and show the graph
-    return True, False
 
 
 @manager.callback(
@@ -72,7 +50,8 @@ def graph_click_data_reset(*args):
     State(store_data.df.store_id, 'data'),
     State(store_data.fig_filename.store_id, 'data')
 )
-def tree_visualisation_update(hover_text, legend, custom_symbols, selected_node, visit_threshold, fig, data, fig_filename):
+def tree_visualisation_update(hover_text, legend, custom_symbols, selected_node, visit_threshold, fig, data,
+                              fig_filename):
     # If there is no file, return empty figure and set fig_filename to None
     if not data['file']:
         return go.Figure(), None

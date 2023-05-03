@@ -99,6 +99,7 @@ def hide_node_config(data):
     Input('upload_file_upload', 'contents'),
     State('upload_file_upload', 'filename'),
     State(store_data.df.store_id, 'data'),
+    prevent_initial_call=True
 )
 def upload_file(pathname, contents, filename, original_data):
     if ctx.triggered_id == "upload_file_upload":
