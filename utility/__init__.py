@@ -6,3 +6,4 @@ from . import tree_graph_generator
 from . import similarity
 from . import path_explanation_generator
 from . import state
+from . import feature_explanation_generator

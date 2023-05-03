@@ -18,8 +18,9 @@ path_feature_col_config = html.Div([
 path_type_config = html.Div([
     dbc.Label("Type", html_for='path_type', class_name='mb-1'),
     dbc.Select(id='path_type',
-               options=['Best path vs Worse path', 'Best action vs Second best action',
-                        'Best action vs another action'],
+               options=[{"label": "Best path vs Worse path", "value": "Best path vs Worse path"},
+                        {"label": "Best action vs Second best action", "value": "Best action vs Second best action"},
+                        {"label": "Best action vs another action", "value": "Best action vs another action"}],
                value='Best path vs Worse path')
 ], className='py-1')
 

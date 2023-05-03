@@ -2,16 +2,18 @@ from dash import html, Input, Output
 import dash_bootstrap_components as dbc
 from utility import callback_manager, store_data
 from explanation.path_explaination import path_explaination_panel
+from explanation.feature_explaination import feature_explaination_panel
 
 
 manager = callback_manager.CallbackManager()
 manager += path_explaination_panel.manager
+manager += feature_explaination_panel.manager
 
 ###############################################
 # Layout
 ###############################################
 explanation_tabs = dbc.Tabs([
-    dbc.Tab("Game Features", label='Game Features'),
+    dbc.Tab(feature_explaination_panel.feature_explanation_contents, label='Game Features'),
     dbc.Tab(path_explaination_panel.path_explanation_contents, label='Path')
 ], class_name='h-100')
 

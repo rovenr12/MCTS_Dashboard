@@ -26,7 +26,6 @@ path_explanation_contents = html.Div([
             dbc.Col(path_configuration.path_configuration_card, lg='4', md='12'),
             dbc.Col(path_explaination.path_explanation_card, lg='8', md='12')
         ], class_name='g-3 mb-4 px-3 h-100'),
-        path_explanation_contents_warning
     ], id='path_explanation', className='h-100'),
     path_explanation_contents_warning
 ], className='my-2', style={"height": "750px"})
