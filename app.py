@@ -1,4 +1,4 @@
-from dash import Dash, html
+from dash import Dash, html, dcc
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 from selected_node_information import selected_node_panel
@@ -27,6 +27,7 @@ app.layout = html.Div([
     store_data.fig_filename.store,
     store_data.custom_symbols.store,
     store_data.selected_node.store,
+    dcc.Location(id='url')
 ], className='bg-light', style={"overflow-x": "hidden", "min-height": "100vh"})
 
 ###############################################

@@ -1,5 +1,6 @@
 import io
 import base64
+import os
 import random
 import pandas as pd
 from utility import store_data, callback_manager, data_preprocessing, attributes
@@ -94,28 +95,39 @@ def hide_node_config(data):
 @manager.callback(
     Output('upload_file_output', 'children'),
     Output(store_data.df.store_id, 'data'),
+    Input('url', 'pathname'),
     Input('upload_file_upload', 'contents'),
     State('upload_file_upload', 'filename'),
     State(store_data.df.store_id, 'data'),
 )
-def upload_file(contents, filename, original_data):
-    if contents:
+def upload_file(pathname, contents, filename, original_data):
+    if ctx.triggered_id == "upload_file_upload":
+        if not contents:
+            return '', original_data
+
         # Get data
         decoded = base64.b64decode(contents.split(',')[1])
         df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep='\t')
 
-        # Check the data validity.
-        if not data_preprocessing.check_df_validity(df):
-            alert = dbc.Alert(f'{filename} is invalid!!', color='danger', dismissable=True)
-            return alert, {'file_id': None, 'file': None}
+    else:
+        pathname = pathname[1:]
+        if pathname not in os.listdir("data"):
+            return '', original_data
 
-        # Create a unique filename
-        file_id = f'{filename}_{random.randint(0, 999999):06d}'
+        # Get data
+        df = pd.read_csv(f"data/{pathname}", sep='\t')
+        filename = pathname
 
-        alert = dbc.Alert(f'{filename} has uploaded successfully!!', color='success', dismissable=True)
-        return alert, {'file_id': file_id, 'file': df.to_json()}
+    # Check the data validity.
+    if not data_preprocessing.check_df_validity(df):
+        alert = dbc.Alert(f'{filename} is invalid!!', color='danger', dismissable=True)
+        return alert, {'file_id': None, 'file': None}
 
-    return '', original_data
+    # Create a unique filename
+    file_id = f'{filename}_{random.randint(0, 999999):06d}'
+
+    alert = dbc.Alert(f'{filename} has uploaded successfully!!', color='success', dismissable=True)
+    return alert, {'file_id': file_id, 'file': df.to_json()}
 
 
 @manager.callback(
