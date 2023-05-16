@@ -97,6 +97,7 @@ def get_features(df, node_name, exclude_features=None, feature_col='Game_Feature
     :return: features dictionary
     """
     node = get_node(df, node_name)
+
     game_features = json.loads(node[feature_col])
 
     if exclude_features:

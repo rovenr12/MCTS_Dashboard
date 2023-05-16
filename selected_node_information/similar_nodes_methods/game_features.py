@@ -85,10 +85,11 @@ def game_feature_accordion_reset(_):
 @manager.callback(
     Output('similar_game_features_exclude', 'options'),
     Output('similar_game_features_exclude', 'value'),
-    Input(store_data.df.store_id, 'data')
+    Input('similar_nodes_game_features_accordion', 'hidden'),
+    State(store_data.df.store_id, 'data')
 )
-def game_feature_exclude_reset(data):
-    if not data['file']:
+def game_feature_exclude_reset(is_hidden, data):
+    if is_hidden or not data['file']:
         return [], []
 
     df = pd.read_json(data['file'])

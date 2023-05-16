@@ -27,6 +27,7 @@ app.layout = html.Div([
     store_data.fig_filename.store,
     store_data.custom_symbols.store,
     store_data.selected_node.store,
+    store_data.feature_explanation_df.store,
     dcc.Location(id='url')
 ], className='bg-light', style={"overflow-x": "hidden", "min-height": "100vh"})
 

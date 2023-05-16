@@ -26,7 +26,7 @@ path_type_config = html.Div([
 
 # exclude action config
 exclude_action_config = html.Div([
-    dbc.Label("Exclude Features", html_for='feature_exclude_actions', class_name='mb-1'),
+    dbc.Label("Exclude Actions", html_for='feature_exclude_actions', class_name='mb-1'),
     dcc.Dropdown(id='feature_exclude_actions', options=[], multi=True)
 ], className='py-1')
 
