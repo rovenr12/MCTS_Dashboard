@@ -147,9 +147,8 @@ def generate_feature_explanation_df(df, depth_type='max', exclude_action_nodes=N
     feature_df.sort_index(inplace=True, key=lambda x: [feature_order_dict[i] for i in x], level=0, sort_remaining=False)
     feature_df.index.names = ['Feature', 'Depth']
 
-    if 'Best_Action' in df.columns:
-        best_action = data_preprocessing.get_root_best_action(df)
-        feature_df = reorder_explanation_df_by_best_action(feature_df, best_action)
+    best_action = data_preprocessing.get_root_best_action(df)
+    feature_df = reorder_explanation_df_by_best_action(feature_df, best_action)
 
     return feature_df, maximum_depth
 

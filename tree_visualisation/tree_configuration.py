@@ -25,7 +25,8 @@ upload_file_layout = html.Div([
         dbc.Popover([
             dbc.PopoverHeader('MCTS File Requirement', class_name='bg-info'),
             dbc.PopoverBody('The MCTS file needs to be a csv file and seperated by "\\t". The file also needs to ' +
-                            'have following columns at least: Name, Parent_Name, Depth, Value and Visit')
+                            'have following columns at least: Name, Parent_Name, Depth, Value, Visit, Action_Name and '
+                            'Best_Action')
         ], target='upload_data_button', trigger='hover')
     ], id='upload_file_upload'),
     html.Div(id='upload_file_output'),

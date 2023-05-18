@@ -1,8 +1,10 @@
-from dash import html, Input, Output, State
+from dash import html, Input, Output, State, dcc
 import dash_bootstrap_components as dbc
 from utility import callback_manager, store_data, data_preprocessing, feature_explanation_generator
 import pandas as pd
 from utility import feature_explaination_helper_function
+import plotly.express as px
+import plotly.graph_objects as go
 
 manager = callback_manager.CallbackManager()
 
@@ -25,19 +27,25 @@ feature_explanation_card = dbc.Card([
     Output(store_data.feature_explanation_df.store_id, 'data'),
     Input('feature_feature_column', 'value'),
     Input('feature_depth', 'value'),
-    Input('feature_exclude_actions', 'value'),
+    Input('feature_include_actions', 'value'),
     Input('feature_exclude_features', 'value'),
     State(store_data.df.store_id, 'data')
 )
-def feature_explanation_data_update(feature_col, feature_depth, exclude_actions, exclude_features, data):
+def feature_explanation_data_update(feature_col, feature_depth, include_actions, exclude_features, data):
     if feature_col is None or feature_depth is None or data['file'] is None:
         return {"df": None, "max_depth": 0}
 
     df = pd.read_json(data['file'])
 
-    root_action_list = data_preprocessing.get_root_available_actions(df, exclude_actions)
+    root_action_list = data_preprocessing.get_root_available_actions(df)
+    exclude_actions = []
 
-    if root_action_list:
+    for root_action in root_action_list:
+        if root_action in include_actions:
+            continue
+        exclude_actions.append(root_action)
+
+    if include_actions:
         table_df, maximum_depth = feature_explanation_generator.generate_feature_explanation_df(df, feature_depth,
                                                                                                 exclude_actions,
                                                                                                 exclude_features,
@@ -59,12 +67,7 @@ def feature_explanation_table_update(feature_explanation_df_dict):
     if table_df is None:
         return []
 
-    table_df = pd.read_json(feature_explanation_df_dict['df'])
-
-    table_df.index = pd.MultiIndex.from_tuples(
-        feature_explaination_helper_function.str_idx_to_tuple_idx(table_df.index), names=('Feature', 'Depth'))
-    table_df.columns = pd.MultiIndex.from_tuples(
-        feature_explaination_helper_function.str_idx_to_tuple_idx(table_df.columns))
+    table_df = feature_explaination_helper_function.json_feature_table_to_df(table_df)
 
     table = dbc.Table.from_dataframe(table_df, bordered=True, hover=True, index=True,
                                      responsive=True, class_name='align-middle text-center')
@@ -90,4 +93,61 @@ def feature_explanation_table_update(feature_explanation_df_dict):
             tr.children[0].rowSpan = maximum_depth
         else:
             tr.children.pop(0)
+    return table
+
+
+@manager.callback(
+    Output('feature_explanation_heatmap', 'children'),
+    Input(store_data.feature_explanation_df.store_id, 'data'),
+)
+def feature_explanation_heatmap_update(feature_explanation_df_dict):
+    table_df = feature_explanation_df_dict['df']
+    maximum_depth = feature_explanation_df_dict['max_depth'] + 1
+
+    if table_df is None:
+        return []
+
+    table_df = feature_explaination_helper_function.json_feature_table_to_df(table_df)
+
+    action_names = table_df.columns.get_level_values(0)
+    actions_dict = {}
+
+    for action in action_names:
+        if action in actions_dict:
+            continue
+
+        actions_dict[action] = {}
+        action_features_df = table_df[action].T
+        action_features_df = action_features_df.applymap(lambda x: float(x.split("%")[0]) if x else None)
+
+        for i in range(maximum_depth):
+            if i == 0:
+                depth_df = action_features_df.iloc[:, action_features_df.columns.get_level_values(1) == 'Immediate']
+            else:
+                depth_df = action_features_df.iloc[:, action_features_df.columns.get_level_values(1) == str(i)]
+
+            if depth_df.isnull().values.any():
+                actions_dict[action][i] = None
+            else:
+                fig = px.imshow(depth_df.values, x=depth_df.columns.get_level_values(0), y=depth_df.index.to_list(),
+                                text_auto='.2f', aspect="auto", color_continuous_scale="blues")
+                fig.update_xaxes(tickangle=90)
+                fig.update(layout_coloraxis_showscale=False)
+
+                fig.update_layout(
+                    autosize=False,
+                    width=800,
+                    height=600
+                )
+
+                actions_dict[action][i] = dcc.Graph(figure=fig)
+
+    actions_df = pd.DataFrame.from_dict(actions_dict)
+    actions_df.rename(index={0: 'Immediate'}, inplace=True)
+
+    table = dbc.Table.from_dataframe(actions_df, bordered=True, hover=True, index=True,
+                                     responsive=True, class_name='align-middle text-center')
+
+    table.children[0].children[0].children[0].children = 'Depth'
+
     return table

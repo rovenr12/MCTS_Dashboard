@@ -26,8 +26,8 @@ path_type_config = html.Div([
 
 # exclude action config
 exclude_action_config = html.Div([
-    dbc.Label("Exclude Actions", html_for='feature_exclude_actions', class_name='mb-1'),
-    dcc.Dropdown(id='feature_exclude_actions', options=[], multi=True)
+    dbc.Label("Include Actions", html_for='feature_include_actions', class_name='mb-1'),
+    dcc.Dropdown(id='feature_include_actions', options=[], multi=True)
 ], className='py-1')
 
 # exclude features config
@@ -85,8 +85,8 @@ def feature_depth_reset(is_hidden):
 
 
 @manager.callback(
-    Output('feature_exclude_actions', 'options'),
-    Output('feature_exclude_actions', 'value'),
+    Output('feature_include_actions', 'options'),
+    Output('feature_include_actions', 'value'),
     Input('feature_explanation', 'hidden'),
     State('dataframe', 'data')
 )
@@ -97,10 +97,18 @@ def exclude_action_config_update(is_hidden, data):
     df = pd.read_json(data['file'])
 
     children = data_preprocessing.get_root_available_actions(df)
+    best_action = data_preprocessing.get_root_best_action(df)
+    best_action_value = None
 
-    options = [{"label": data_preprocessing.node_name_to_action_name(df, child), "value": child} for child in children]
+    options = []
 
-    return options, None
+    for child in children:
+        action_name = data_preprocessing.node_name_to_action_name(df, child)
+        if best_action == action_name:
+            best_action_value = child
+        options.append({"label": action_name, "value": child})
+
+    return options, [best_action_value]
 
 
 @manager.callback(

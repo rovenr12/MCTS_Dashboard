@@ -1,0 +1,9 @@
+plotly
+dash
+pandas
+numpy
+networkx
+dash_bootstrap_components
+dash_bootstrap_templates
+pygraphviz
+kaleido

@@ -1,7 +1,7 @@
 import json
 from utility import similarity
 
-BASIC_ATTRIBUTE = ["Name", "Parent_Name", "Depth", "Value", "Visits"]
+BASIC_ATTRIBUTE = ["Name", "Parent_Name", "Depth", "Value", "Visits", "Action_Name", "Best_Action"]
 
 
 def check_df_validity(df):
