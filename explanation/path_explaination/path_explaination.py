@@ -42,4 +42,4 @@ def path_explanation_update(feature_col, path_type, action_name, exclude_feature
         explanations = path_explanation_generator.counterfactual_explanation_by_paths(df, action_name, exclude_features,
                                                                                       feature_col)
 
-    return ' '.join(explanations)
+    return explanations

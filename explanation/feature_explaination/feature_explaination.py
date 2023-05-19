@@ -5,6 +5,7 @@ import pandas as pd
 from utility import feature_explaination_helper_function
 import plotly.express as px
 import plotly.graph_objects as go
+from base64 import b64encode
 
 manager = callback_manager.CallbackManager()
 
@@ -134,13 +135,18 @@ def feature_explanation_heatmap_update(feature_explanation_df_dict):
                 fig.update_xaxes(tickangle=90)
                 fig.update(layout_coloraxis_showscale=False)
 
-                fig.update_layout(
-                    autosize=False,
-                    width=800,
-                    height=600
-                )
+                # fig.update_layout(
+                #     autosize=False,
+                #     width=800,
+                #     height=600
+                # )
 
-                actions_dict[action][i] = dcc.Graph(figure=fig)
+                # actions_dict[action][i] = dcc.Graph(figure=fig)
+
+                img_bytes = fig.to_image(format='png')
+                encoding = b64encode(img_bytes).decode()
+                img_b64 = "data:image/png;base64," + encoding
+                actions_dict[action][i] = html.Img(src=img_b64, style={'height': '400px'})
 
     actions_df = pd.DataFrame.from_dict(actions_dict)
     actions_df.rename(index={0: 'Immediate'}, inplace=True)
