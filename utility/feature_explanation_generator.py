@@ -161,6 +161,10 @@ def reorder_explanation_df_by_best_action(feature_df, best_action):
     :return: the reorder explanation df
     """
     actions = list(set(feature_df.columns.get_level_values(0)))
+
+    if best_action not in actions:
+        return feature_df
+
     best_action_idx = actions.index(best_action) + 1
 
     if best_action_idx > 0:
