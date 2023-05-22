@@ -47,35 +47,97 @@ def get_path_feature_difference(path, rel_tol=0.0001):
     return feature_differences, percentage_differences
 
 
+def generate_explanation(feature_tuple, direction):
+    if len(feature_tuple) == 0:
+        return []
+
+    max_val = feature_tuple[0][1]
+    if type(max_val) == str:
+        feature_names = [feature for feature, change in feature_tuple]
+        if len(feature_names) > 1:
+            return [f'an initial {direction} in {", ".join(feature_names[:-1])} and {feature_names[-1]}']
+        else:
+            return [f'an initial {direction} in {feature_names[0]}']
+
+    explanations = []
+    initial_list = []
+
+    for feature, change in feature_tuple:
+        if type(change) == str:
+            initial_list.append(feature)
+            continue
+
+        if change > 100:
+            explanations.append(f'a substantial {change / 100:.1f}-fold {direction} in {feature}')
+        elif change >= 80:
+            explanations.append(f'a significant {direction} in {feature}')
+        elif change >= 60:
+            explanations.append(f'a moderate {direction} in {feature}')
+        elif change >= 40:
+            explanations.append(f'a modest {direction} in {feature}')
+        elif change >= 20:
+            explanations.append(f'a slight {direction} in {feature}')
+        else:
+            explanations.append(f'a minimal {direction} in {feature}')
+
+    if initial_list:
+        if len(initial_list) > 1:
+            explanations.append(f'an initial {direction} in {", ".join(initial_list[:-1])} and {initial_list[-1]}')
+        else:
+            explanations.append(f'an initial {direction} in {initial_list[0]}')
+
+    return explanations
+
+
 def generate_explanation_list(features_differences, percentage_differences,
                               features=None, percentage_differences_B=None):
     if features is None:
         features = features_differences.keys()
 
-    feature_explanation = []
-    addition = ""
+    increase_dict = {}
+    decrease_dict = {}
 
     for feature in features:
+        special_case = ['increase', 'decrease']
         feature_difference = features_differences[feature]
-        percentage_difference = percentage_differences[feature]
-        if percentage_difference == 'infinite' or not percentage_differences_B:
-            percentage_difference = percentage_difference
+        percentage_diff = percentage_differences[feature]
+        if percentage_diff in special_case or not percentage_differences_B:
+            percentage_diff = percentage_diff
         else:
-            percentage_difference = (percentage_difference + percentage_differences_B[feature]) / 2
-            addition = 'around '
+            percentage_diff = (percentage_diff + percentage_differences_B[feature]) / 2
 
         if feature_difference > 0:
-            if percentage_difference != 'infinite':
-                feature_explanation.append(f"{feature} increase by {addition}{abs(percentage_difference):.1f}%")
-            else:
-                feature_explanation.append(f"{feature} increase")
+            increase_dict[feature] = percentage_diff if percentage_diff in special_case else abs(percentage_diff)
         else:
-            if percentage_difference != 'infinite':
-                feature_explanation.append(f"{feature} decrease by {addition}{abs(percentage_difference):.1f}%")
-            else:
-                feature_explanation.append(f"{feature} decrease")
+            decrease_dict[feature] = percentage_diff if percentage_diff in special_case else abs(percentage_diff)
 
-    return feature_explanation
+    increase_sorted_tuple = sorted(increase_dict.items(), key=lambda x: x[1] if type(x[1]) != str else -1, reverse=True)
+    decrease_sorted_tuple = sorted(decrease_dict.items(), key=lambda x: x[1] if type(x[1]) != str else -1, reverse=True)
+
+    explanation_list = []
+    increase_explanation = generate_explanation(increase_sorted_tuple, 'increase')
+    decrease_explanation = generate_explanation(decrease_sorted_tuple, 'decrease')
+
+    if len(increase_explanation):
+        explanation_list.append(f"Some features are expected to increase in the future state. ")
+        if len(increase_explanation) == 1:
+            explanation_list.append(f"It is expected {increase_explanation[0]}. ")
+        else:
+            explanation_list.append(f"It is expected {', '.join(increase_explanation[:-1])}, "
+                                    f"and {increase_explanation[-1]}. ")
+
+    if len(decrease_explanation):
+        if len(increase_explanation):
+            explanation_list.append(f"On the other hand, some features are expected to decrease, including ")
+        else:
+            explanation_list.append(f"Some features are expected to decrease, including ")
+        if len(decrease_explanation) == 1:
+            explanation_list.append(f"{decrease_explanation[0]}. ")
+        else:
+            explanation_list.append(f"{', '.join(decrease_explanation[:-1])}, "
+                                    f"and {decrease_explanation[-1]}. ")
+
+    return explanation_list
 
 
 def classify_features(features_A, features_B):
@@ -100,11 +162,11 @@ def explanation_by_paths(df, state_col='Game_Features', exclude_features=None):
     action_space = df[df.Parent_Name == root_node_name].shape[0]
 
     if len(df[df.Parent_Name == root_node_name]['Value'].unique()) != 1:
-        explanations.append(f"There are {action_space} actions available for this state.")
+        explanations.append(f"There are {action_space} actions available for this state. ")
     else:
         # Check the value of all possible action, if the value is the same, it is just a random decision
         explanations.append(f"There are {action_space} actions available for this state, all with equal value. "
-                            f"Therefore, there is no significant difference in selecting any of the actions.")
+                            f"Therefore, there is no significant difference in selecting any of the actions. ")
 
     # Get Best action name
     best_action_name = data_preprocessing.get_root_best_action(df)
@@ -114,16 +176,16 @@ def explanation_by_paths(df, state_col='Game_Features', exclude_features=None):
                                         exclude_features=exclude_features)
     ba_feature_differences, ba_percentage_differences = get_path_feature_difference(best_action_paths)
 
-    explanations.append(f'The agent has selected {best_action_name} as the preferred action.')
+    explanations.append(f'The agent has selected {best_action_name} as the preferred action. ')
 
     # Get the number of executed actions in the path
     actions_number = len(best_action_paths) - 1
     if actions_number == 1:
         explanations.append(f'The following explanation is based on the simulation results obtained from executing '
-                            f'this chosen action.')
+                            f'this chosen action. ')
     else:
         explanations.append(f'The following explanation is based on the simulation results obtained from executing '
-                            f'this chosen action along with {actions_number - 1} additional action(s).')
+                            f'this chosen action along with {actions_number - 1} additional action(s). ')
 
     explanations.append(html.Br())
     explanations.append(html.Br())
@@ -138,20 +200,16 @@ def explanation_by_paths(df, state_col='Game_Features', exclude_features=None):
     # Situation 1: No difference between the best value path and the worst value path
     if ba_feature_differences == wa_feature_differences:
         explanations.append("Interestingly, consistently choosing the best or worst action starting from the selected "
-                            "action leads to the same outcome.")
+                            "action leads to the same outcome. ")
 
         feature_explanation = generate_explanation_list(ba_feature_differences, ba_percentage_differences)
 
         if len(feature_explanation) == 0:
-            explanations.append(f"It is expected that all features will remain unchanged in the future state.")
+            explanations.append(f"It is expected that all features will remain unchanged in the future state. ")
             return explanations
 
-        if len(feature_explanation) == 1:
-            explanations.append(f"It is expected that {feature_explanation[0]} in the future state.")
-            return explanations
+        explanations += feature_explanation
 
-        explanations.append(f"It is expected that {', '.join(feature_explanation[:-1])} and {feature_explanation[-1]} "
-                            f"in the future state.")
         return explanations
 
     # Situation 2: Difference between the best value path and the worst value path
@@ -171,24 +229,20 @@ def explanation_by_paths(df, state_col='Game_Features', exclude_features=None):
 
     # Combine explanations based on different situations
     if len(feature_explanation):
-        union_sentence = f"{', '.join(feature_explanation[:-1])} and {feature_explanation[-1]}" if len(
-            feature_explanation) > 1 else feature_explanation[0]
-        explanations.append(f"In both the best and worst scenarios, it is expected that {union_sentence} "
-                            f"in the future state.")
+        explanations.append(f"In both the best and worst scenarios, various features undergo changes. ")
+        explanations += feature_explanation
         explanations.append(html.Br())
         explanations.append(html.Br())
 
     if len(best_feature_explanation):
-        best_sentence = f"{', '.join(best_feature_explanation[:-1])} and {best_feature_explanation[-1]}" if len(
-            best_feature_explanation) > 1 else best_feature_explanation[0]
-        explanations.append(f"In the best situation, it is expected that {best_sentence}.")
+        explanations.append(f"In the best situation, several features undergo changes. ")
+        explanations += best_feature_explanation
         explanations.append(html.Br())
         explanations.append(html.Br())
 
     if len(worse_feature_explanation):
-        worst_sentence = f"{', '.join(worse_feature_explanation[:-1])} and {worse_feature_explanation[-1]}" if len(
-            worse_feature_explanation) > 1 else worse_feature_explanation[0]
-        explanations.append(f"However, in the worst situation, it is expected that {worst_sentence}")
+        explanations.append(f"In contrast, in the worst situation, there are changes observed in various features. ")
+        explanations += worse_feature_explanation
 
     return explanations
 
@@ -265,15 +319,13 @@ def counterfactual_explanation_by_paths(df, action_name=None, exclude_features=N
         explanations.append("Interestingly, when consistently selecting the best action starting from either of the "
                             "given actions, the outcomes remain the same.")
         feature_explanation = generate_explanation_list(ba_feature_differences, ba_percentage_differences)
+
         if len(feature_explanation) == 0:
-            explanations.append(f"It is expected that all features remain the same in the future state.")
+            explanations.append(f"It is expected that all features will remain unchanged in the future state. ")
             return explanations
-        if len(feature_explanation) == 1:
-            explanations.append(
-                f"It is expected that {feature_explanation[0]} in the future state.")
-            return explanations
-        explanations.append(f"It is expected {', '.join(feature_explanation[:-1])} and {feature_explanation[-1]} "
-                            f"in the future state.")
+
+        explanations += feature_explanation
+
         return explanations
 
     # Situation 2: Difference between two paths
@@ -287,28 +339,33 @@ def counterfactual_explanation_by_paths(df, action_name=None, exclude_features=N
     if len(common_features):
         feature_explanation = generate_explanation_list(ba_feature_differences, ba_percentage_differences,
                                                         common_features, ca_percentage_differences)
-        union_sentence = f"{', '.join(feature_explanation[:-1])} and {feature_explanation[-1]}" if len(
-            feature_explanation) > 1 else feature_explanation[0]
-        explanations.append(f"In the simulation results of the selected actions, it is expected that {union_sentence} "
-                            f"in the future state.")
+
+        explanations.append(f"In the simulation results of the selected actions, "
+                            f"various features undergo changes will happen in both actions. ")
+        explanations += feature_explanation
         explanations.append(html.Br())
         explanations.append(html.Br())
 
     if len(ba_exclude_features):
         best_feature_explanation = generate_explanation_list(ba_feature_differences, ba_percentage_differences,
                                                              ba_exclude_features)
-        best_sentence = f"{', '.join(best_feature_explanation[:-1])} and {best_feature_explanation[-1]}" if len(
-            best_feature_explanation) > 1 else best_feature_explanation[0]
-        explanations.append(f"Executing the {best_action_name} action is expected to result in {best_sentence}.")
+        explanations.append(f"When executing the {best_action_name} action, several features undergo different changes "
+                            f"compared to the other action. ")
+        explanations += best_feature_explanation
         explanations.append(html.Br())
         explanations.append(html.Br())
 
     if len(ca_exclude_features):
         comparison_feature_explanation = generate_explanation_list(ca_feature_differences, ca_percentage_differences,
-                                                                    ca_exclude_features)
-        comparison_sentence = f"{', '.join(comparison_feature_explanation[:-1])} and {comparison_feature_explanation[-1]}" if len(
-            comparison_feature_explanation) > 1 else comparison_feature_explanation[0]
-        explanations.append(f"On the other hand, executing the {action_name} action is expected to result in"
-                            f" {comparison_sentence}.")
+                                                                   ca_exclude_features)
+
+        if len(ba_exclude_features):
+            explanations.append(f"On the other hand, executing the {action_name} action leads to changes in various "
+                                f"features different from the other action. ")
+        else:
+            explanations.append(f"Executing the {action_name} action leads to changes in various features "
+                                f"different from the other action. ")
+        explanations += comparison_feature_explanation
+
     return explanations
 

@@ -28,10 +28,19 @@ class State:
         for key, feature in self.features_dict.items():
             difference = feature - state.features_dict[key]
             if abs(state.features_dict[key]) < 0.0001:
-                percentage_dict[key] = 'infinite'
+                if difference > 0:
+                    percentage_dict[key] = 'increase'
+                else:
+                    percentage_dict[key] = 'decrease'
             else:
-                percentage_dict[key] = 100 * (difference) / abs(state.features_dict[key])
+                percentage_dict[key] = 100 * difference / abs(state.features_dict[key])
         return percentage_dict
+
+    def feature_change(self, state):
+        feature_change_dict = {}
+        for key, feature in self.features_dict.items():
+            feature_change_dict[key] = [state.features_dict[key], feature]
+        return feature_change_dict
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
