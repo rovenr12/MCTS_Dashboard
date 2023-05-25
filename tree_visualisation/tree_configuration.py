@@ -181,6 +181,7 @@ def legend_select_update(is_hidden, data):
 
 
 @manager.callback(
+    Output('visit_threshold', 'min'),
     Output('visit_threshold', 'max'),
     Output('visit_threshold', 'value'),
     Input('node_config', 'hidden'),
@@ -189,23 +190,30 @@ def legend_select_update(is_hidden, data):
 def visit_threshold_input_update(is_hidden, data):
     # If the configuration is hidden or there is no data, set the options and value to None
     if is_hidden or not data['file']:
-        return 1, 1
+        return 1, 1, 1
 
     # Load the dataframe
     df = pd.read_json(data['file'])
 
+    visit_minimum = 1
+
+    while df.shape[0] > 500:
+        visit_minimum += 1
+        df = df[df['Visits'] >= visit_minimum]
+
     # Find the maximum value
     visit_maximum = df['Visits'].max()
 
-    return visit_maximum, 1
+    return visit_minimum, visit_maximum, visit_minimum
 
 
 @manager.callback(
     Output('visit_threshold_form_text', 'children'),
+    Input('visit_threshold', 'min'),
     Input('visit_threshold', 'max')
 )
-def set_visit_threshold_placeholder(max_val):
-    return f'Type number between 1 and {max_val}'
+def set_visit_threshold_placeholder(min_val, max_val):
+    return f'Type number between {min_val} and {max_val}. The maximum number of nodes is 500.'
 
 
 @manager.callback(
