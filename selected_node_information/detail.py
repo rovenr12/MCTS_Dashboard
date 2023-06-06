@@ -58,7 +58,7 @@ def update_node_information(selected_node, data):
     attributes = get_attributes(df)
 
     for attribute in attributes:
-        if attribute == 'Name':
+        if attribute == 'Name' or attribute == 'Image':
             continue
         elif attribute in get_json_type_attributes(df):
             game_state_json = json.loads(selected_node[attribute])

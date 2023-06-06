@@ -1,13 +1,14 @@
 from dash import html, Output, Input, ALL, ctx, State
 import dash_bootstrap_components as dbc
 from utility import callback_manager, store_data, tree_graph_generator
-from selected_node_information import detail, children_node, similar_nodes_panel
+from selected_node_information import detail, children_node, similar_nodes_panel, image
 from dash._utils import AttributeDict
 
 manager = callback_manager.CallbackManager()
 manager += detail.manager
 manager += children_node.manager
 manager += similar_nodes_panel.manager
+manager += image.manager
 
 ###############################################
 # Layout
@@ -19,8 +20,10 @@ selected_node_info_card = html.Div(dbc.Card([
     ], class_name='py-3'),
     dbc.CardBody(html.Div([
         dbc.Row([
-            dbc.Col(detail.node_detail_card, lg='6', md='12'),
-            dbc.Col(html.Div([children_node.children_nodes_card, similar_nodes_panel.similar_nodes_card]), lg='6', md='12'),
+            dbc.Col(image.node_image_card, id='select_node_img_col', lg='4', md='12', style={'display': 'none'}),
+            dbc.Col(detail.node_detail_card, id='select_node_detail_col', lg='4', md='12'),
+            dbc.Col(html.Div([children_node.children_nodes_card, similar_nodes_panel.similar_nodes_card]),
+                    id='select_node_related_node_col', lg='4', md='12'),
         ], class_name='g-3')
     ], className='p-0 m-0'))
 ]), className='my-2 shadow')
@@ -40,6 +43,29 @@ selected_node_info_row = html.Div(dbc.Row([
 )
 def panel_control(data):
     return not data
+
+
+@manager.callback(
+    Output('select_node_img_col', 'style'),
+    Input(store_data.selected_node.store_id, 'data')
+)
+def img_col_style_change(data):
+    if not data or 'Image' not in data:
+        return {'display': 'none'}
+
+    return {'display': 'block'}
+
+
+@manager.callback(
+    Output('select_node_related_node_col', 'lg'),
+    Output('select_node_detail_col', 'lg'),
+    Input(store_data.selected_node.store_id, 'data')
+)
+def col_size_change(data):
+    if data and 'Image' in data:
+        return 4, 4
+
+    return 6, 6
 
 
 @manager.callback(

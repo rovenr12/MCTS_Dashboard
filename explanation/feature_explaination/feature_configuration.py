@@ -36,13 +36,20 @@ exclude_features_config = html.Div([
     dcc.Dropdown(id='feature_exclude_features', options=[], multi=True)
 ], className='py-1')
 
+# change ratio
+change_ratio_config = html.Div([
+    dbc.Label("Change Ratio", html_for='feature_change_ratio', class_name='mb-1'),
+    dbc.Input(id='feature_change_ratio', min=0, max=100, value=0, step=1, type='number')
+])
+
 feature_configuration_card = dbc.Card([
     dbc.CardHeader(html.P("Configuration", className='m-0 fw-bold text-center text-primary'), class_name='py-3'),
     dbc.CardBody([
         path_feature_col_config,
         path_type_config,
         exclude_action_config,
-        exclude_features_config
+        exclude_features_config,
+        change_ratio_config
     ], id='feature_configuration_card')
 ], class_name='my-2 h-100')
 
@@ -71,6 +78,17 @@ def feature_column_name_reset(is_hidden, data):
     feature_options = [{"label": str(option), "value": option} for option in feature_attributes]
 
     return feature_options, feature_value
+
+
+@manager.callback(
+    Output('feature_change_ratio', 'value'),
+    Input('feature_explanation', 'hidden')
+)
+def feature_depth_reset(is_hidden):
+    if is_hidden:
+        return None
+
+    return 0
 
 
 @manager.callback(
@@ -127,4 +145,3 @@ def path_exclude_features_reset(feature_col, data):
     features = data_preprocessing.get_features(df, root_node_name, feature_col=feature_col)
     features = [{"label": str(feature), "value": feature} for feature in features]
     return features, []
-

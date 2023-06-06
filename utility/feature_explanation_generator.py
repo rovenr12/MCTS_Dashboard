@@ -1,4 +1,4 @@
-from utility import data_preprocessing
+from utility import data_preprocessing, feature_explaination_helper_function
 import math
 import pandas as pd
 
@@ -87,7 +87,7 @@ def get_feature_counts(df, root_features, node_list, exclude_features=None, feat
 
 
 def generate_feature_explanation_df(df, depth_type='max', exclude_action_nodes=None, exclude_features=None,
-                                    feature_col='Game_Features', rel_tol=0.001):
+                                    feature_col='Game_Features', change_ratio=0, rel_tol=0.001):
     """
     Return the dataframe of explanations based on game features changes in different depth
     :param df: MCTS data file
@@ -97,6 +97,7 @@ def generate_feature_explanation_df(df, depth_type='max', exclude_action_nodes=N
     :param exclude_action_nodes: the list of root actions will be ignored
     :param exclude_features: the list of features will be ignored
     :param feature_col: the column name of features
+    :param change_ratio: the change threshold that will use to estimate the features that does not change much
     :param rel_tol: the column name used for getting available actions (It needs to be unique for different nodes)
     :return: the game features explanation dataframe
     """
@@ -110,6 +111,9 @@ def generate_feature_explanation_df(df, depth_type='max', exclude_action_nodes=N
         maximum_depth = min_depth
     else:
         maximum_depth = (max_depth + min_depth) // 2
+
+    # Reformat the change ratio from number to percentage
+    change_ratio = change_ratio / 100
 
     # Get the root node features
     root_name = data_preprocessing.get_root_node_name(df)
@@ -149,6 +153,7 @@ def generate_feature_explanation_df(df, depth_type='max', exclude_action_nodes=N
 
     best_action = data_preprocessing.get_root_best_action(df)
     feature_df = reorder_explanation_df_by_best_action(feature_df, best_action)
+    feature_df = drop_feature_by_change_ratio(feature_df, change_ratio)
 
     return feature_df, maximum_depth
 
@@ -157,7 +162,7 @@ def reorder_explanation_df_by_best_action(feature_df, best_action):
     """
     Reorder the columns to put the best action in the front
     :param best_action: the action name of best action from root
-    :param feature_df: the column name of features
+    :param feature_df: the feature summary dataframe
     :return: the reorder explanation df
     """
     actions = list(set(feature_df.columns.get_level_values(0)))
@@ -173,3 +178,23 @@ def reorder_explanation_df_by_best_action(feature_df, best_action):
 
     new_cols, _ = feature_df.columns.reindex(actions, level=0)
     return feature_df[new_cols]
+
+
+def drop_feature_by_change_ratio(feature_df, change_ratio=0.1):
+    """
+    Drop the feature from dataframe if it does not change much
+    :param feature_df: the feature summary dataframe
+    :param change_ratio: the change threshold that will use to estimate the features that does not change much
+    :return: feature summary dataframe
+    """
+    change_threshold = 1 - change_ratio
+    drop_feature_list = []
+    for feature in feature_df.index.get_level_values(0).unique():
+        feature_same_str_vals = feature_df.loc[(feature, slice(None)), (slice(None), "Same")].values.reshape(-1)
+        feature_same_vals = feature_explaination_helper_function.str_percentage_to_float(feature_same_str_vals)
+
+        same_rate = sum(feature_same_vals) / len(feature_same_vals) / 100
+        if same_rate > change_threshold:
+            drop_feature_list.append(feature)
+
+    return feature_df.drop(index=drop_feature_list, level=0)

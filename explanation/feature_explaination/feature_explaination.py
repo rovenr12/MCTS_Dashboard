@@ -30,10 +30,11 @@ feature_explanation_card = dbc.Card([
     Input('feature_depth', 'value'),
     Input('feature_include_actions', 'value'),
     Input('feature_exclude_features', 'value'),
+    Input('feature_change_ratio', 'value'),
     State(store_data.df.store_id, 'data')
 )
-def feature_explanation_data_update(feature_col, feature_depth, include_actions, exclude_features, data):
-    if feature_col is None or feature_depth is None or data['file'] is None:
+def feature_explanation_data_update(feature_col, feature_depth, include_actions, exclude_features, change_ratio, data):
+    if feature_col is None or feature_depth is None or data['file'] is None or change_ratio is None:
         return {"df": None, "max_depth": 0}
 
     df = pd.read_json(data['file'])
@@ -50,7 +51,8 @@ def feature_explanation_data_update(feature_col, feature_depth, include_actions,
         table_df, maximum_depth = feature_explanation_generator.generate_feature_explanation_df(df, feature_depth,
                                                                                                 exclude_actions,
                                                                                                 exclude_features,
-                                                                                                feature_col)
+                                                                                                feature_col,
+                                                                                                change_ratio)
 
         return {"df": table_df.to_json(), "max_depth": maximum_depth}
 
