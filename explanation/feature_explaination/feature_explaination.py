@@ -16,7 +16,8 @@ feature_explanation_card = dbc.Card([
     dbc.CardHeader(html.P("Explanation", className='m-0 fw-bold text-center text-primary'), class_name='py-3'),
     dbc.CardBody(dbc.Tabs([
         dbc.Tab(html.Div(id='feature_explanation_table'), label='Table'),
-        dbc.Tab(html.Div(id='feature_explanation_heatmap'), label='HeatMap')
+        dbc.Tab(html.Div(id='feature_explanation_heatmap'), label='HeatMap'),
+        dbc.Tab(html.Div(id='feature_explanation_text'), label='Text'),
     ]))
 ], class_name='my-2 h-100')
 
@@ -150,3 +151,18 @@ def feature_explanation_heatmap_update(feature_explanation_df_dict):
     table.children[0].children[0].children[0].children = 'Depth'
 
     return table
+
+
+@manager.callback(
+    Output('feature_explanation_text', 'children'),
+    Input(store_data.feature_explanation_df.store_id, 'data'),
+)
+def feature_explanation_text_update(feature_explanation_df_dict):
+    feature_df = feature_explanation_df_dict['df']
+
+    if feature_df is None:
+        return []
+
+    feature_df = feature_explaination_helper_function.json_feature_table_to_df(feature_df)
+
+    return feature_explanation_generator.generate_text_explanation(feature_df)
