@@ -43,6 +43,12 @@ def feature_explanation_data_update(feature_col, feature_depth, include_actions,
     root_action_list = data_preprocessing.get_root_available_actions(df)
     exclude_actions = []
 
+    if not change_ratio:
+        change_ratio = 0
+
+    if not exclude_features:
+        exclude_features = []
+
     for root_action in root_action_list:
         if root_action in include_actions:
             continue
@@ -140,7 +146,8 @@ def feature_explanation_heatmap_update(feature_explanation_df_dict):
                 fig.update_xaxes(title='Feature')
                 fig.update_yaxes(title='Root Relative Change')
 
-                actions_dict[action][i] = dcc.Graph(figure=fig, config={'staticPlot': True}, responsive=True)
+                actions_dict[action][i] = dcc.Graph(figure=fig, style={'width': '700px'})
+
 
     actions_df = pd.DataFrame.from_dict(actions_dict)
     actions_df.rename(index={0: 'Immediate'}, inplace=True)
