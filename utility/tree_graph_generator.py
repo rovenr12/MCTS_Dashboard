@@ -101,25 +101,6 @@ def get_node_data(graph, df):
     return node_x, node_y, custom_data
 
 
-def generate_hover_template_text(df, hover_template_attributes):
-    if hover_template_attributes:
-        hover_template_text = ["%{customdata.Name}"]
-        for attribute in hover_template_attributes:
-            if attribute in get_attributes(df):
-                hover_template_text.append(f"{attribute}: %{{customdata.{attribute}}}")
-        hover_template_text = "<br>".join(hover_template_text)
-        hover_template_text += "<extra></extra>"
-        return hover_template_text
-    return "%{customdata.Name}<extra></extra>"
-
-
-def update_hover_text(fig, df, hover_template_attributes=None):
-    fig = get_figure_object(fig)
-    hover_template_text = generate_hover_template_text(df, hover_template_attributes)
-    fig.data[1].update(hovertemplate=hover_template_text)
-    return fig
-
-
 def get_custom_data_by_node_name(fig, node_name):
     fig = get_figure_object(fig)
     custom_data = fig.data[1]['customdata']
@@ -161,28 +142,36 @@ def generate_fig(graph, df):
     fig = go.Figure(data=[edge_trace, node_trace],
                     layout=go.Layout(
                         showlegend=False,
-                        hovermode='closest',
                         margin=dict(b=20, l=5, r=5, t=40),
                         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
                     )
 
-    fig = update_hover_text(fig, df)
+    fig.update_traces(hoverinfo="none", hovertemplate=None)
+
     return fig
 
 
-def generate_visit_threshold_network(df, threshold, hovertext=None, legend=None, custom_symbols=None):
+def generate_visit_threshold_network(df, threshold, legend=None, custom_symbols=None):
     df = df[df['Visits'] >= threshold]
 
     fig = generate_fig(generate_network(df), df)
 
-    if hovertext:
-        fig = update_hover_text(fig, df, hovertext)
-
     if legend:
-        fig = update_legend(fig, df, legend)
+        fig = update_legend(fig, df, legend, threshold)
 
     fig = update_marker_symbols(fig, custom_symbols)
+
+    # if threshold > 1:
+    #     custom_data = fig.data[1]['customdata']
+    #     marker = fig.data[1]['marker']
+    #     marker['colorscale'] = tuple([(0, 'rgb(128, 128, 128)')] + list(marker['colorscale'][1:]))
+    #     new_color = list(marker['color'])
+    #     for idx, data in enumerate(custom_data):
+    #         if data['Visits'] < threshold:
+    #             new_color[idx] = 0
+    #
+    #     marker['color'] = tuple(new_color)
 
     return fig
 
