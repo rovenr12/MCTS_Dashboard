@@ -9,6 +9,9 @@ To run the project in a conda environment, follow these steps after cloning the 
 2. conda activate <chosen environment name>
 3. pip install -r requirements.txt
 
+## Usage
+To access the application, execute the app.py file and open your browser. Then, use the following link: http://127.0.0.1:8050.
+
 
 ## Example Data
 You can find the example data in the "data" folder.
