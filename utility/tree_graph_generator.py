@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 import networkx as nx
 import plotly.express as px
 from utility.attributes import get_attributes, get_legend_attributes
+import numpy as np
 
 
 def get_figure_object(fig):
@@ -13,7 +14,9 @@ def get_figure_object(fig):
     :return: Figure
     """
     if type(fig) == dict:
-        return plotly.io.from_json(json.dumps(fig))
+        # fig = plotly.io.from_json(json.dumps(fig))
+        fig['data'][1]['marker']['color'] = [color if color is not None else np.nan for color in fig['data'][1]['marker']['color']]
+        return plotly.graph_objects.Figure(fig)
     return fig
 
 
@@ -27,20 +30,31 @@ def get_figure_custom_data_by_node_name(fig, node_name):
     return None
 
 
-def highlight_selected_node(fig, node_name):
+def highlight_selected_node(fig, node_name, visit_threshold):
     fig = get_figure_object(fig)
     custom_data = fig.data[1]['customdata']
+    opacity = []
+
+    for data in custom_data:
+        if data['Name'] != node_name:
+            if data['Visits'] >= visit_threshold:
+                opacity.append(0.6)
+            else:
+                opacity.append(0.2)
+        else:
+            opacity.append(1)
+
     fig.data[1].update(
-        marker={"opacity": [0.4 if i['Name'] != node_name else 1 for i in custom_data],
+        marker={"opacity": opacity,
                 "size": [10 if i['Name'] != node_name else 20 for i in custom_data]})
     return fig
 
 
-def reset_highlight_figure(fig):
+def update_opacity(fig, threshold):
     fig = get_figure_object(fig)
     custom_data = fig.data[1]['customdata']
     fig.data[1].update(
-        marker={"opacity": [1 for _ in custom_data], "size": [10 for _ in custom_data]})
+        marker={"opacity": [1 if i['Visits'] >= threshold else 0.2 for i in custom_data], "size": [10 for _ in custom_data]})
     return fig
 
 
@@ -152,8 +166,8 @@ def generate_fig(graph, df):
     return fig
 
 
-def generate_visit_threshold_network(df, threshold, legend=None, custom_symbols=None):
-    df = df[df['Visits'] >= threshold]
+def generate_visit_threshold_network(df, threshold, legend=None, custom_symbols=None, min_visit_threshold=0):
+    df = df[df['Visits'] >= min_visit_threshold]
 
     fig = generate_fig(generate_network(df), df)
 
@@ -161,17 +175,7 @@ def generate_visit_threshold_network(df, threshold, legend=None, custom_symbols=
         fig = update_legend(fig, df, legend, threshold)
 
     fig = update_marker_symbols(fig, custom_symbols)
-
-    # if threshold > 1:
-    #     custom_data = fig.data[1]['customdata']
-    #     marker = fig.data[1]['marker']
-    #     marker['colorscale'] = tuple([(0, 'rgb(128, 128, 128)')] + list(marker['colorscale'][1:]))
-    #     new_color = list(marker['color'])
-    #     for idx, data in enumerate(custom_data):
-    #         if data['Visits'] < threshold:
-    #             new_color[idx] = 0
-    #
-    #     marker['color'] = tuple(new_color)
+    fig = update_opacity(fig, threshold)
 
     return fig
 
@@ -193,7 +197,7 @@ def update_legend(fig, df, legend_name, visit_threshold=None):
             tickvals=[i for i in list(name_dict.values())],
             ticktext=list(name_dict.keys())
         )
-        color = [name_dict[i[legend_name]] for i in custom_data]
+        color = [name_dict[i[legend_name]] if i['Visits'] >= visit_threshold else np.nan for i in custom_data]
         colorscale = []
         for val, template_color in zip(list(name_dict.values()), px.colors.qualitative.Light24):
             colorscale.append([float(val) / len(name_dict), f"rgb{plotly.colors.hex_to_rgb(template_color)}"])
@@ -206,7 +210,7 @@ def update_legend(fig, df, legend_name, visit_threshold=None):
             tickvals=None,
             ticktext=None
         )
-        color = [i[legend_name] for i in custom_data]
+        color = [i[legend_name] if i['Visits'] >= visit_threshold else np.nan for i in custom_data]
         colorscale = "bluered"
 
     fig.data[1].update(marker={"color": color, "colorscale": colorscale, "colorbar": colorbar})

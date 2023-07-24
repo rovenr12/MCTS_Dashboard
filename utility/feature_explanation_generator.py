@@ -506,11 +506,15 @@ def generate_counterfactual_feature_explanation(action_feature_change_dict):
 
     # If min_addition_num != 0, we need to compare to average
     if min_additional_num != 0:
+        explanations.append(html.B("On Average: "))
+        explanations.append(html.Br())
         counterfactual_summary = get_counterfactual_feature_change_summary(action_feature_change_dict, 'average', action_a, action_b)
         explanations += get_counterfactual_feature_explanation(counterfactual_summary, action_a, action_b)
 
     for i in range(min_additional_num + 1):
         i_str = 'Immediate' if i == 0 else str(i)
+        explanations.append(html.B(f"In Depth {i_str}:"))
+        explanations.append(html.Br())
         counterfactual_summary = get_counterfactual_feature_change_summary(action_feature_change_dict, i_str, action_a, action_b)
         explanations += get_counterfactual_feature_explanation(counterfactual_summary, action_a, action_b)
 

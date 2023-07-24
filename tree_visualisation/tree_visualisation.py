@@ -15,7 +15,8 @@ manager = callback_manager.CallbackManager()
 tree_visualisation_div = html.Div(dbc.Card([
     dbc.CardHeader(html.H4("Tree Visualisation", className='m-0 fw-bold text-center text-primary'), class_name='py-3'),
     dbc.CardBody([
-        html.Div([dcc.Graph(id='tree_visualisation_graph', figure=go.Figure(), clear_on_unhover=True),
+        html.Div([dcc.Graph(id='tree_visualisation_graph', figure=go.Figure(), clear_on_unhover=True,
+                            style={'width': '80%', 'margin': 'auto'}),
                   dcc.Tooltip(id='tree_node_hover_text')
                   ])
     ], id='output-graph')
@@ -50,11 +51,12 @@ def graph_click_data_reset(*args):
     Input(store_data.custom_symbols.store_id, 'data'),
     Input(store_data.selected_node.store_id, 'data'),
     State('visit_threshold', 'value'),
+    State('visit_threshold', 'min'),
     State('tree_visualisation_graph', 'figure'),
     State(store_data.df.store_id, 'data'),
     State(store_data.fig_filename.store_id, 'data')
 )
-def tree_visualisation_update(legend, custom_symbols, selected_node, visit_threshold, fig, data,
+def tree_visualisation_update(legend, custom_symbols, selected_node, visit_threshold, min_visit_threshold, fig, data,
                               fig_filename):
     # If there is no file, return empty figure and set fig_filename to None
     if not data['file']:
@@ -67,11 +69,13 @@ def tree_visualisation_update(legend, custom_symbols, selected_node, visit_thres
     if data['file_id'] != fig_filename or (ctx.triggered_id == store_data.selected_node.store_id and not selected_node):
         if not visit_threshold:
             visit_threshold = 1
-        return tree_graph_generator.generate_visit_threshold_network(df, visit_threshold, legend, custom_symbols), data['file_id']
+        return tree_graph_generator.generate_visit_threshold_network(df, visit_threshold, legend,
+                                                                     custom_symbols,
+                                                                     min_visit_threshold), data['file_id']
 
     # Update the selected_node
     if ctx.triggered_id == store_data.selected_node.store_id and selected_node:
-        return tree_graph_generator.highlight_selected_node(fig, selected_node['Name']), fig_filename
+        return tree_graph_generator.highlight_selected_node(fig, selected_node['Name'], visit_threshold), fig_filename
 
     # Update the legend
     if ctx.triggered_id == "legend":
@@ -118,9 +122,10 @@ def graph_click_data_reset(hoverData, hover_text):
                                        style={'overflow': 'hidden', 'white-space': 'nowrap', 'text-overflow': 'ellipsis'},
                                        className='m-0'))
 
-    children = [html.Div(elements, style={'width': '60vh'})]
+    children = [html.Div(elements, style={'width': '500px'})]
 
     direction = 'top' if bbox['y0'] > 400 else 'right'
+
 
     return True, bbox, children, direction
 

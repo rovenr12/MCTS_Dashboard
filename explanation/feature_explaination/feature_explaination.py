@@ -146,7 +146,7 @@ def feature_explanation_heatmap_update(feature_explanation_df_dict):
                 fig.update_xaxes(title='Feature')
                 fig.update_yaxes(title='Root Relative Change')
 
-                actions_dict[action][i] = dcc.Graph(figure=fig, style={'width': '700px'})
+                actions_dict[action][i] = dcc.Graph(figure=fig, style={'width': '700px', 'margin': 'auto'})
 
 
     actions_df = pd.DataFrame.from_dict(actions_dict)
