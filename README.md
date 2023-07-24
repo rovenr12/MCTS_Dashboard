@@ -5,9 +5,9 @@ MCTS Dashboard is a web-based application that offers visualizations and explana
 
 ## Install
 To run the project in a conda environment, follow these steps after cloning the project onto your PC. Navigate to the directory where you cloned the project and input the following commands to enable the game to run on your computer:
-1- conda create -n <chosen environment name> python=3.8
-2- conda activate <chosen environment name>
-3- pip install -r requirements.txt
+1. conda create -n <chosen environment name> python=3.8
+2. conda activate <chosen environment name>
+3. pip install -r requirements.txt
 
 
 ## Example Data
