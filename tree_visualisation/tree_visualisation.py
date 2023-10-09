@@ -75,7 +75,7 @@ def tree_visualisation_update(legend, custom_symbols, selected_node, visit_thres
 
     # Update the selected_node
     if ctx.triggered_id == store_data.selected_node.store_id and selected_node:
-        return tree_graph_generator.highlight_selected_node(fig, selected_node['Name'], visit_threshold), fig_filename
+        return tree_graph_generator.highlight_selected_node(fig, df, selected_node['Name'], visit_threshold), fig_filename
 
     # Update the legend
     if ctx.triggered_id == "legend":

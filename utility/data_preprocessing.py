@@ -206,3 +206,7 @@ def search_similar_node_by_children_action(df, visit_threshold, node_name, simil
     similarities = [children[0] for children in similarities]
 
     return list(similarities)
+
+
+
+

@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 import networkx as nx
 import plotly.express as px
 from utility.attributes import get_attributes, get_legend_attributes
+from utility import data_preprocessing
 import numpy as np
 
 
@@ -30,23 +31,39 @@ def get_figure_custom_data_by_node_name(fig, node_name):
     return None
 
 
-def highlight_selected_node(fig, node_name, visit_threshold):
+def highlight_selected_node(fig, df, node_name, visit_threshold):
     fig = get_figure_object(fig)
     custom_data = fig.data[1]['customdata']
     opacity = []
+    sizes = []
+    child_node_name = None
+
+    children_list = data_preprocessing.get_node_available_actions(df, node_name)
+    best_action_name = data_preprocessing.get_node(df, node_name)['Best_Action']
+
+    for child in children_list:
+        if best_action_name == data_preprocessing.get_node(df, child)['Action_Name']:
+            child_node_name = child
+            break
 
     for data in custom_data:
-        if data['Name'] != node_name:
+        if data['Name'] == node_name:
+            opacity.append(1)
+            sizes.append(20)
+        else:
+            if child_node_name is not None and data['Name'] == child_node_name:
+                sizes.append(15)
+            else:
+                sizes.append(10)
+
             if data['Visits'] >= visit_threshold:
                 opacity.append(0.6)
             else:
                 opacity.append(0.2)
-        else:
-            opacity.append(1)
 
     fig.data[1].update(
         marker={"opacity": opacity,
-                "size": [10 if i['Name'] != node_name else 20 for i in custom_data]})
+                "size": sizes})
     return fig
 
 
