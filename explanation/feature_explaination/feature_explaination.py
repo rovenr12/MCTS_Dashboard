@@ -15,9 +15,9 @@ manager = callback_manager.CallbackManager()
 feature_explanation_card = dbc.Card([
     dbc.CardHeader(html.P("Explanation", className='m-0 fw-bold text-center text-primary'), class_name='py-3'),
     dbc.CardBody(dbc.Tabs([
-        dbc.Tab(html.Div(id='feature_explanation_table'), label='Table'),
-        dbc.Tab(html.Div(id='feature_explanation_heatmap'), label='HeatMap'),
-        dbc.Tab(html.Div(id='feature_explanation_text'), label='Text'),
+        dbc.Tab(html.Div(id='feature_explanation_table', className='my-2'), label='Table'),
+        dbc.Tab(html.Div(id='feature_explanation_heatmap', className='my-2'), label='HeatMap'),
+        dbc.Tab(html.Div(id='feature_explanation_text', className='my-2'), label='Text'),
     ]))
 ], class_name='my-2 h-100')
 
