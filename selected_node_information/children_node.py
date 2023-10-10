@@ -35,9 +35,32 @@ def update_children_button_list(selected_node, data, visit_threshold):
     if not visit_threshold:
         visit_threshold = 1
 
-    for children in data_preprocessing.search_children_by_node_name(df, visit_threshold, selected_node['Name']):
-        children_id = {'type': 'children_button', 'index': children}
-        children_buttons.append(dbc.Col(dbc.Button(children, size="sm", id=children_id), className="m-2"))
+    children = data_preprocessing.search_children_by_node_name(df, visit_threshold, selected_node['Name'])
+    best_children = None
+    worst_children = None
+
+    if len(children) > 1:
+        children_df = df[df['Name'].isin(children)]
+        max_children_val = children_df['Value'].max()
+        min_children_val = children_df['Value'].min()
+
+        if abs(max_children_val - min_children_val) >= 0.001:
+            best_children = children_df[children_df['Value'] == max_children_val]['Name'].tolist()
+            worst_children = children_df[children_df['Value'] == min_children_val]['Name'].tolist()
+
+    for child in children:
+        children_id = {'type': 'children_button', 'index': child}
+        if best_children is None:
+            children_buttons.append(dbc.Col(dbc.Button(child, size="sm", id=children_id), className="m-2"))
+        else:
+            if child in best_children:
+                children_buttons.append(dbc.Col(dbc.Button(child, size="sm", id=children_id, color='success'),
+                                                className="m-2"))
+            elif child in worst_children:
+                children_buttons.append(dbc.Col(dbc.Button(child, size="sm", id=children_id, color='danger'),
+                                                className="m-2"))
+            else:
+                children_buttons.append(dbc.Col(dbc.Button(child, size="sm", id=children_id), className="m-2"))
 
     if not children_buttons:
         return dbc.Row("No children from this node", class_name='h-100 align-items-center justify-content-center')

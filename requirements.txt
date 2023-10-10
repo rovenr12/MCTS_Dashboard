@@ -1,8 +1,9 @@
-plotly
-dash
-pandas
-numpy
-networkx
+dash~=2.7.0
+numpy~=1.23.5
+plotly~=5.9.0
+networkx~=2.8.4
+pandas~=1.5.3
+pillow~=9.4.0
 dash_bootstrap_components
 dash_bootstrap_templates
 pygraphviz
