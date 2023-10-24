@@ -36,8 +36,15 @@ def update_children_button_list(selected_node, data, visit_threshold):
         visit_threshold = 1
 
     children = data_preprocessing.search_children_by_node_name(df, visit_threshold, selected_node['Name'])
+
+    if not children:
+        return dbc.Row("No children from this node", class_name='h-100 align-items-center justify-content-center')
+
     best_children = None
     worst_children = None
+
+    children_df = df[df['Name'].isin(children)]
+    children_df.sort_values("Visits")
 
     if len(children) > 1:
         children_df = df[df['Name'].isin(children)]
@@ -62,7 +69,8 @@ def update_children_button_list(selected_node, data, visit_threshold):
             else:
                 children_buttons.append(dbc.Col(dbc.Button(child, size="sm", id=children_id), className="m-2"))
 
-    if not children_buttons:
-        return dbc.Row("No children from this node", class_name='h-100 align-items-center justify-content-center')
+    children_df['Name'] = children_buttons
+    children_df = children_df[['Name', 'Visits', 'Value']]
+    table = dbc.Table.from_dataframe(children_df, striped=True, bordered=True, hover=True)
 
-    return dbc.Row(children_buttons, class_name='row-cols-auto g-1', justify='center')
+    return dbc.Row(table, class_name='row-cols-auto g-1', justify='center')

@@ -250,25 +250,59 @@ def get_feature_change_summary(feature_df, action_name, depth, rel_tol=0.001):
     return feature_higher_dict, feature_lower_dict
 
 
+def change_converter(change):
+    # http://www2.mitre.org/work/sepo/toolkits/risk/StandardProcess/definitions/occurence.html
+    if change >= 95:
+        return "is extremely sure to"
+    elif change >= 85:
+        return "is almost sure to"
+    elif change >= 75:
+        return "is very likely to"
+    elif change >= 65:
+        return "is likely to"
+    elif change >= 55:
+        return "have a somewhat greater than an even chance to"
+    elif change >= 45:
+        return "have an even chance to occur"
+    elif change >= 35:
+        return "have a somewhat less than an even chance to"
+    elif change >= 25:
+        return "is not likely to"
+    elif change >= 15:
+        return "is almost sure not to"
+    else:
+        return "is extremely sure not to"
+
+
 def get_top_n_summary_sentence(feature_dict, direction_name, n=3, rel_tol=0.001):
     feature_tuple = sorted(feature_dict.items(), key=lambda x: x[1], reverse=True)
-    top_n = [feature for feature, change in feature_tuple[:n]]
 
-    for i in range(n, len(feature_tuple)):
-        if abs(feature_tuple[i][1] - feature_tuple[n - 1][1]) > rel_tol:
+    if len(feature_tuple) == 0:
+        return f"None of features will become {direction_name} during the simulation. "
+
+    change_count = 1
+    changes = [feature_tuple[0][1]]
+    top_n = [feature_tuple[0][0]]
+
+    if len(feature_tuple) == 1:
+        return f"It is expected that {top_n[0]} {change_converter(changes[0])} be {direction_name} during the simulation. "
+
+    for feature, change in feature_tuple[1:]:
+        if change_count > n:
             break
-        top_n.append(feature_tuple[i][0])
 
-    if len(top_n) == 0:
-        return f"None of features will become {direction_name} during the simulation."
+        if abs(change - changes[-1]) > rel_tol:
+            change_count += 1
 
-    if len(top_n) == 1:
-        return f"Only {top_n[0]} will become {direction_name} during the simulation."
+        changes.append(change)
+        top_n.append(feature)
 
-    if len(top_n) < n:
-        return f"Only {len(top_n)} features, namely being {', '.join(top_n[:-1])} and {top_n[-1]}, are expected to {direction_name} during the simulation."
+    text = f"It is expected that the following {len(top_n)} features are expected to be {direction_name} and have the highest influence during the simulation. "
 
-    return f"The top {min(len(top_n), n)} features are anticipated to {direction_name} during the simulation are {', '.join(top_n[:-1])} and {top_n[-1]}."
+    for feature, change in zip(top_n, changes):
+        text += f"{feature.capitalize()} {change_converter(change)} be {direction_name} during the simulation. "
+
+    return text
 
 
 def generate_action_feature_change_dict(feature_df):
@@ -296,14 +330,14 @@ def generate_feature_based_action_generation(action_dict):
     explanations = []
     depth_length = len(action_dict.keys())
     if depth_length == 1:
-        explanations.append("The agent simulates the potential outcome of a given action based on its immediate consequences.")
-        explanations.append("The agent's focus on immediate result of given action can be attributed to several factors, including determining whether the action leads to a victory or defeat in the game, constraints on computation time, and limited potential for success of certain actions.")
-        explanations.append("As the simulation progresses, certain features are expected to undergo changes.")
+        explanations.append("The agent simulates the potential outcome of a given action based on its immediate consequences. ")
+        explanations.append("The agent's focus on immediate result of given action can be attributed to several factors, including determining whether the action leads to a victory or defeat in the game, constraints on computation time, and limited potential for success of certain actions. ")
+        explanations.append("As the simulation progresses, certain features are expected to undergo changes. ")
         explanations.append(get_top_n_summary_sentence(action_dict['Immediate']['higher'], 'higher'))
         explanations.append(get_top_n_summary_sentence(action_dict['Immediate']['lower'], 'lower'))
     else:
         length = depth_length - 1
-        explanations.append(f"The agent employs a simulation process to evaluate the potential outcome of a given action along with {length - 1} other actions.")
+        explanations.append(f"The agent employs a simulation process to evaluate the potential outcome of a given action along with {length - 1} other actions. ")
         explanations.append(f"On average, several features are expected to change during the simulation.")
         explanations.append(get_top_n_summary_sentence(action_dict['average']['higher'], 'higher'))
         explanations.append(get_top_n_summary_sentence(action_dict['average']['lower'], 'lower'))
@@ -312,18 +346,18 @@ def generate_feature_based_action_generation(action_dict):
 
         for i in range(length):
             if i == 0:
-                explanations.append("When focusing on the immediate consequences of executing the given action, certain features are projected to undergo the most significant changes.")
+                explanations.append("When focusing on the immediate consequences of executing the given action, certain features are projected to undergo the most significant changes. ")
                 explanations.append(get_top_n_summary_sentence(action_dict['Immediate']['higher'], 'higher'))
                 explanations.append(get_top_n_summary_sentence(action_dict['Immediate']['lower'], 'lower'))
                 explanations.append(html.Br())
                 explanations.append(html.Br())
             else:
                 if i == (depth_length - 1):
-                    explanations.append(f"Lastly, when considering executing the given action and {i} action(s), the following features are predicted to undergo the most substantial changes.")
+                    explanations.append(f"Lastly, when considering executing the given action and {i} action(s), the following features are predicted to undergo the most substantial changes. ")
                     explanations.append(get_top_n_summary_sentence(action_dict[f'{i}']['higher'], 'higher'))
                     explanations.append(get_top_n_summary_sentence(action_dict[f'{i}']['lower'], 'lower'))
                 else:
-                    explanations.append(f"When considering executing the given action and {i} action(s), the following features are predicted to undergo the most substantial changes.")
+                    explanations.append(f"When considering executing the given action and {i} action(s), the following features are predicted to undergo the most substantial changes. ")
                     explanations.append(get_top_n_summary_sentence(action_dict[f'{i}']['higher'], 'higher'))
                     explanations.append(get_top_n_summary_sentence(action_dict[f'{i}']['lower'], 'lower'))
                     explanations.append(html.Br())
