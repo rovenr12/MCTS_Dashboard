@@ -44,7 +44,6 @@ def update_children_button_list(selected_node, data, visit_threshold):
     worst_children = None
 
     children_df = df[df['Name'].isin(children)]
-    children_df.sort_values("Visits")
 
     if len(children) > 1:
         children_df = df[df['Name'].isin(children)]
@@ -70,7 +69,8 @@ def update_children_button_list(selected_node, data, visit_threshold):
                 children_buttons.append(dbc.Col(dbc.Button(child, size="sm", id=children_id), className="m-2"))
 
     children_df['Name'] = children_buttons
-    children_df = children_df[['Name', 'Visits', 'Value']]
+    children_df = children_df[['Name', 'Action_Name', 'Visits', 'Value']]
+    children_df = children_df.sort_values("Visits", ascending=False)
     table = dbc.Table.from_dataframe(children_df, striped=True, bordered=True, hover=True)
 
-    return dbc.Row(table, class_name='row-cols-auto g-1', justify='center')
+    return html.Div(table, className='g-1')
