@@ -31,7 +31,8 @@ selected_node_info_card = html.Div(dbc.Card([
 selected_node_info_row = html.Div(dbc.Row([
     dbc.Col(selected_node_info_card, lg='12', md='12',
             class_name='h-100'),
-], class_name='g-3 mb-4 px-3', style={'height': '900px'}), id='selected_node_info_div', hidden=True)
+], class_name='g-3 mb-4 px-3', style={'height': '900px'}), id='selected_node_info_div',
+    hidden=True, style={'height': '900px', 'overflow-x': 'hidden'})
 
 
 ###############################################
